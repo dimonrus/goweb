@@ -85,7 +85,7 @@ func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler
 				}
 				e := rest.NewRestError("​​​​Critical issue. Please send it to technical support: "+err.Error(), http.StatusInternalServerError)
 				key := "stack"
-				message := fmt.Sprintf("%s", debug.Stack())
+				message := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 				e = e.AppendDetail(message, &key, nil)
 				m.app.GetLogger(gocli.LogLevelDebug).Error(message)
 				rest.ErrorResponse(w, e)
