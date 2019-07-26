@@ -13,12 +13,12 @@ import (
 
 // Middleware Collection
 type middlewareCollection struct {
-	config *Config
+	config Config
 	app    gocli.Application
 }
 
 // New Middleware Collection Init Method
-func NewMiddlewareCollection(config *Config, app gocli.Application) *middlewareCollection {
+func NewMiddlewareCollection(config Config, app gocli.Application) *middlewareCollection {
 	return &middlewareCollection{
 		config: config,
 		app:    app,
