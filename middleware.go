@@ -2,6 +2,7 @@ package goweb
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/dimonrus/gocli"
 	"github.com/dimonrus/rest"
@@ -71,7 +72,17 @@ func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler
 		}
 		defer func() {
 			if r := recover(); r != nil {
-				err := r.(error)
+				var err error
+				switch r.(type) {
+				case error:
+					err = r.(error)
+				case string:
+					err = errors.New(r.(string))
+				case gocli.IError:
+					err = errors.New(r.(gocli.IError).Error())
+				default:
+					err = errors.New("some unsupported error")
+				}
 				e := rest.NewRestError("​​​​Critical issue. Please send it to technical support: "+err.Error(), http.StatusInternalServerError)
 				key := "stack"
 				message := fmt.Sprintf("%s", debug.Stack())
