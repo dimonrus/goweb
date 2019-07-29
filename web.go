@@ -11,9 +11,9 @@ import (
 	"time"
 )
 
-// Init Web application
-func NewApplication(config Config, app gocli.Application, connState func(net.Conn, http.ConnState)) *application {
-	return &application{
+// Init Web Application
+func NewApplication(config Config, app gocli.Application, connState func(net.Conn, http.ConnState)) *Application {
+	return &Application{
 		config: config,
 		app:    app,
 		server: &http.Server{
@@ -27,7 +27,7 @@ func NewApplication(config Config, app gocli.Application, connState func(net.Con
 }
 
 // Make server and listen
-func (a *application) Listen(routes http.Handler) {
+func (a *Application) Listen(routes http.Handler) {
 	// Set routes
 	a.server.Handler = routes
 	// Run our server in a goroutine so that it doesn't block.
@@ -58,7 +58,7 @@ func (a *application) Listen(routes http.Handler) {
 		a.app.FatalError(err)
 	}
 	// Optionally, you could run srv.Shutdown in a goroutine and block on
-	// <-ctx.Done() if your application should wait for other services
+	// <-ctx.Done() if your Application should wait for other services
 	// to finalize based on context cancellation.
 	a.app.GetLogger(gocli.LogLevelDebug).Warn("Server shutting down")
 	os.Exit(0)

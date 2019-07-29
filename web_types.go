@@ -53,8 +53,8 @@ type ConnectionBindings struct {
 	bindingIdConnection map[BindingIdentifier]ConnectionIdentifier
 }
 
-// Web application
-type application struct {
+// Web Application
+type Application struct {
 	config Config
 	app    gocli.Application
 	server *http.Server
