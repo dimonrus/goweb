@@ -1,7 +1,9 @@
 package goweb
 
 import (
+	"github.com/dimonrus/gocli"
 	"net"
+	"net/http"
 	"sync"
 )
 
@@ -49,4 +51,11 @@ type ConnectionBindings struct {
 	rw                  sync.RWMutex
 	connectionBindingId map[ConnectionIdentifier]BindingIdentifier
 	bindingIdConnection map[BindingIdentifier]ConnectionIdentifier
+}
+
+// Web application
+type application struct {
+	config Config
+	app    gocli.Application
+	server *http.Server
 }
