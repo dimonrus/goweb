@@ -22,8 +22,11 @@ type middlewareCollection struct {
 // New Middleware Collection Init Method
 func NewMiddlewareCollection(config Config, app gocli.Application, maxLogBodySize int64) *middlewareCollection {
 	return &middlewareCollection{
-		config:         config,
-		app:            app,
+		config: config,
+		app:    app,
+		// if maxLogBodySize == -1 then do not need log body
+		// if maxLogBodySize == 0 then log all body
+		// if maxLogBodySize > 0 then read maxBodySize bytes from body for logging
 		maxLogBodySize: maxLogBodySize,
 	}
 }
