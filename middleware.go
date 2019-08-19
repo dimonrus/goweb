@@ -14,15 +14,17 @@ import (
 
 // Middleware Collection
 type middlewareCollection struct {
-	config Config
-	app    gocli.Application
+	config         Config
+	app            gocli.Application
+	maxLogBodySize int64
 }
 
 // New Middleware Collection Init Method
-func NewMiddlewareCollection(config Config, app gocli.Application) *middlewareCollection {
+func NewMiddlewareCollection(config Config, app gocli.Application, maxLogBodySize int64) *middlewareCollection {
 	return &middlewareCollection{
-		config: config,
-		app:    app,
+		config:         config,
+		app:            app,
+		maxLogBodySize: maxLogBodySize,
 	}
 }
 
@@ -38,22 +40,19 @@ func (m *middlewareCollection) loggingRequest(r *http.Request) rest.IError {
 		logHeaders += fmt.Sprintf("-H '%s: %s' ", k, strings.Join(v, ","))
 	}
 	var body []byte
-	switch r.Method {
-	case http.MethodPut:
-		fallthrough
-	case http.MethodPatch:
-		fallthrough
-	case http.MethodPost:
-		b, err := ioutil.ReadAll(r.Body)
+
+	if r.ContentLength > 0 && m.maxLogBodySize > -1 {
+		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			return rest.NewRestError("IO error: "+err.Error(), http.StatusBadRequest)
 		}
-		err = r.Body.Close()
-		if err != nil {
-			return rest.NewRestError("IO error: "+err.Error(), http.StatusBadRequest)
+		buf := bytes.NewReader(data)
+		if m.maxLogBodySize > 0 {
+			body = data[:m.maxLogBodySize]
+		} else {
+			body = data
 		}
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(b))
-		body = b
+		r.Body = ioutil.NopCloser(buf)
 	}
 
 	format := fmt.Sprintf("\x1b[33;1mREQUESTED: \x1b[34;1mcurl -X %s '%s' %s -d '%s'\x1b[0m", r.Method, m.getRequestedUrl(r), logHeaders, strings.Join(strings.Fields(string(body)), " "))
