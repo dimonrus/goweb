@@ -50,7 +50,7 @@ func (m *middlewareCollection) loggingRequest(r *http.Request) rest.IError {
 			return rest.NewRestError("IO error: "+err.Error(), http.StatusBadRequest)
 		}
 		buf := bytes.NewReader(data)
-		if m.maxLogBodySize > 0 {
+		if m.maxLogBodySize > 0 && m.maxLogBodySize <= r.ContentLength {
 			body = data[:m.maxLogBodySize]
 		} else {
 			body = data
