@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dimonrus/gocli"
-	"github.com/dimonrus/rest"
+	"github.com/dimonrus/gorest"
+	"github.com/dimonrus/porterr"
 	"io/ioutil"
 	"net/http"
 	"runtime/debug"
@@ -37,7 +38,7 @@ func (m *middlewareCollection) getRequestedUrl(r *http.Request) string {
 }
 
 // Logging request
-func (m *middlewareCollection) loggingRequest(r *http.Request) rest.IError {
+func (m *middlewareCollection) loggingRequest(r *http.Request) porterr.IError {
 	var logHeaders string
 	for k, v := range r.Header {
 		logHeaders += fmt.Sprintf("-H '%s: %s' ", k, strings.Join(v, ","))
@@ -47,7 +48,7 @@ func (m *middlewareCollection) loggingRequest(r *http.Request) rest.IError {
 	if r.ContentLength > 0 && m.maxLogBodySize > -1 {
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			return rest.NewRestError("IO error: "+err.Error(), http.StatusBadRequest)
+			return porterr.New(porterr.PortErrorBody, "IO error: "+err.Error()).HTTP(http.StatusBadRequest)
 		}
 		buf := bytes.NewReader(data)
 		if m.maxLogBodySize > 0 && m.maxLogBodySize <= r.ContentLength {
@@ -69,7 +70,7 @@ func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e := m.loggingRequest(r)
 		if e != nil {
-			rest.ErrorResponse(w, e)
+			gorest.Send(w, gorest.NewErrorJsonResponse(e))
 			return
 		}
 		defer func() {
@@ -80,17 +81,17 @@ func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler
 					err = r.(error)
 				case string:
 					err = errors.New(r.(string))
-				case gocli.IError:
-					err = errors.New(r.(gocli.IError).Error())
+				case porterr.IError:
+					err = errors.New(r.(porterr.IError).Error())
 				default:
 					err = errors.New("some unsupported error")
 				}
-				e := rest.NewRestError("​​​​Critical issue. Please send it to technical support: "+err.Error(), http.StatusInternalServerError)
+				e := porterr.NewF(porterr.PortErrorSystem, "​​​​Critical issue. Please send it to technical support: %s", err.Error())
 				key := "stack"
 				message := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-				e = e.AppendDetail(message, &key, nil)
+				e = e.PushDetail(&key,"callback", message)
 				m.app.GetLogger(gocli.LogLevelDebug).Error(message)
-				rest.ErrorResponse(w, e)
+				gorest.Send(w, gorest.NewErrorJsonResponse(e))
 			}
 		}()
 		next.ServeHTTP(w, r)
@@ -101,6 +102,7 @@ func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler
 func (m *middlewareCollection) NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	message := fmt.Sprintf("%s not found on server", m.getRequestedUrl(r))
 	m.app.GetLogger(gocli.LogLevelDebug).Error("\x1b[33;1mREQUESTED: \x1b[31;1m", message, "\x1b[0m")
-	rest.NotFoundResponse(w, message)
+	e := porterr.New(porterr.PortErrorHandler, message).HTTP(http.StatusNotFound)
+	gorest.Send(w, gorest.NewErrorJsonResponse(e))
 	return
 }
