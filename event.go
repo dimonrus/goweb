@@ -38,7 +38,7 @@ func (cel *ConnectionEventListeners) Dispatch(id ConnectionIdentifier, name Conn
 	defer cel.rw.RUnlock()
 	if events, ok := cel.listener[id]; ok {
 		for i := range events {
-			if events[i].Name == name {
+			if events[i].Name == name && len(events[i].Done) == 0 {
 				events[i].Done <- true
 			}
 		}
