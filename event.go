@@ -4,7 +4,7 @@ package goweb
 func (cel *ConnectionEventListeners) Register(id ConnectionIdentifier, name ConnectionEventName) chan bool {
 	cel.rw.Lock()
 	defer cel.rw.Unlock()
-	event := &ConnectionEvent{Name: name, Done: make(chan bool)}
+	event := &ConnectionEvent{Name: name, Done: make(chan bool, 1)}
 	cel.listener[id] = append(cel.listener[id], *event)
 
 	return event.Done
