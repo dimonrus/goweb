@@ -3,6 +3,8 @@ package goweb
 import (
 	"context"
 	"github.com/dimonrus/gocli"
+	"github.com/dimonrus/gohelp"
+	"github.com/dimonrus/porterr"
 	"net"
 	"net/http"
 	"os"
@@ -11,18 +13,98 @@ import (
 	"time"
 )
 
-// Init Web Application
-func NewApplication(config Config, app gocli.Application, connState func(net.Conn, http.ConnState)) *Application {
-	return &Application{
-		config: config,
-		app:    app,
-		server: &http.Server{
-			Addr:         config.Host + ":" + strconv.Itoa(config.Port),
-			ReadTimeout:  time.Second * time.Duration(config.Timeout.Read),
-			WriteTimeout: time.Second * time.Duration(config.Timeout.Write),
-			IdleTimeout:  time.Second * time.Duration(config.Timeout.Idle),
-			ConnState:    connState,
-		},
+const (
+	CommandStart   = "start"
+	CommandStop    = "stop"
+	CommandRestart = "restart"
+	CommandStatus  = "status"
+	CommandWeb     = "web"
+)
+
+var CommandActions = []string{
+	CommandStart, CommandStop, CommandRestart, CommandStatus,
+}
+
+// Web config
+type Config struct {
+	// Web application port
+	Port int
+	// Web application server host
+	Host string
+	// Web application url. For logging
+	Url string
+	// Server timeouts
+	Timeout struct {
+		// Timeout read
+		Read int
+		// Timeout write
+		Write int
+		// Timeout idle
+		Idle int
+	}
+}
+
+// Web Application
+type Application struct {
+	// The console application base interface.
+	// Required for start
+	gocli.Application
+	// Config of web application
+	config Config
+	// Http server type
+	server *http.Server
+	// Exit web server
+	exit chan bool
+}
+
+// Parse gocli.Command
+func DecomposeCommand(command *gocli.Command) (action string, arguments []gocli.Argument, e porterr.IError) {
+	args := command.Arguments()
+	if len(args) > 0 {
+		if args[0].Name != CommandWeb {
+			e = porterr.New(porterr.PortErrorArgument, "Web command must start with keyword 'web'")
+			return
+		}
+		if len(args) < 2 {
+			e = porterr.New(porterr.PortErrorArgument, "Web command must contain action")
+			return
+		}
+		action = args[1].Name
+		if !gohelp.ExistsInArrayString(action, CommandActions) {
+			e = porterr.New(porterr.PortErrorArgument, "Web command action is unknown: "+action)
+		}
+	} else {
+		e = porterr.New(porterr.PortErrorArgument, "Web command is empty")
+	}
+	return
+}
+
+// Graceful shutdown web application
+func (a *Application) shutdown() <-chan bool {
+	go func() {
+		sig := make(chan os.Signal, 1)
+		// Accept graceful shutdowns when quit (Ctrl+C)
+		signal.Notify(sig, os.Interrupt)
+		<-sig
+		a.exit <- true
+	}()
+	return a.exit
+}
+
+// Web command processor
+func (a *Application) WebCommander(command *gocli.Command) {
+	a.SuccessMessage("Receive command: "+command.String(), &gocli.Command{})
+	action, _, e := DecomposeCommand(command)
+	if e != nil {
+		a.FatalError(e)
+		return
+	}
+	switch action {
+	case CommandStop:
+		a.AttentionMessage("Stopping web server by command... " + command.String())
+		go func() {
+			a.exit <- true
+		}()
 	}
 }
 
@@ -30,38 +112,45 @@ func NewApplication(config Config, app gocli.Application, connState func(net.Con
 func (a *Application) Listen(routes http.Handler) {
 	// Set routes
 	a.server.Handler = routes
-	// Run our server in a goroutine so that it doesn't block.
+	// Run server so that it doesn't block.
 	go func() {
 		if err := a.server.ListenAndServe(); err != nil {
-			a.app.GetLogger(gocli.LogLevelDebug).Error("Can't listen: ", err.Error())
+			a.GetLogger(gocli.LogLevelDebug).Error("Can't listen: ", err.Error())
 		}
 	}()
-
-	a.app.GetLogger(gocli.LogLevelDebug).Infof("Web server started at %s", a.server.Addr)
-
-	c := make(chan os.Signal, 1)
-	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
-	// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
-	signal.Notify(c, os.Interrupt)
-
-	// Block until we receive our signal.
-	<-c
-
+	// Log into console that server started
+	a.GetLogger(gocli.LogLevelDebug).Infof("Web server started at %s", a.server.Addr)
+	// Block until program receive exit command or wait for OS interrupt
+	<-a.shutdown()
 	// Create a deadline to wait for.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(a.config.Timeout.Read))
+	// Call cancel immediately after func out of scope
 	defer cancel()
-
-	// Doesn't block if no connections, but will otherwise wait
-	// until the timeout deadline.
+	// Shut down the server
 	err := a.server.Shutdown(ctx)
 	if err != nil {
-		a.app.FatalError(err)
+		a.FatalError(err)
 	}
-	// Optionally, you could run srv.Shutdown in a goroutine and block on
-	// <-ctx.Done() if your Application should wait for other services
-	// to finalize based on context cancellation.
-	a.app.GetLogger(gocli.LogLevelDebug).Warn("Server shutting down")
-	os.Exit(0)
-
+	// Log shutdown into console
+	a.GetLogger(gocli.LogLevelDebug).Warn("Server shutting down")
+	// os.Exit(0)
 	return
+}
+
+// Init Web Application
+func NewApplication(config Config, app gocli.Application, connState func(net.Conn, http.ConnState)) *Application {
+	return &Application{
+		config:      config,
+		Application: app,
+		exit:        make(chan bool),
+		server: &http.Server{
+			Addr:         config.Host + ":" + strconv.Itoa(config.Port),
+			ReadTimeout:  time.Second * time.Duration(config.Timeout.Read),
+			WriteTimeout: time.Second * time.Duration(config.Timeout.Write),
+			IdleTimeout:  time.Second * time.Duration(config.Timeout.Idle),
+			// We can handle our connections.
+			// It is useful for web sockets or SSE or distributed transaction
+			ConnState: connState,
+		},
+	}
 }

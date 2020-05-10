@@ -2,14 +2,14 @@ package goweb
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/dimonrus/gocli"
+	"github.com/dimonrus/gohelp"
 	"github.com/dimonrus/gorest"
 	"github.com/dimonrus/porterr"
 	"io/ioutil"
 	"net/http"
-	"runtime/debug"
+	"strconv"
 	"strings"
 )
 
@@ -34,17 +34,18 @@ func NewMiddlewareCollection(config Config, app gocli.Application, maxLogBodySiz
 
 // Get requested url
 func (m *middlewareCollection) getRequestedUrl(r *http.Request) string {
-	return fmt.Sprintf("%s:%v%s", m.config.Url, m.config.Port, r.URL.Path+"?"+r.URL.RawQuery)
+	return m.config.Url + ":" + strconv.Itoa(m.config.Port) + r.URL.Path + "?" + r.URL.RawQuery
 }
 
 // Logging request
 func (m *middlewareCollection) loggingRequest(r *http.Request) porterr.IError {
 	var logHeaders string
 	for k, v := range r.Header {
-		logHeaders += fmt.Sprintf("-H '%s: %s' ", k, strings.Join(v, ","))
+		logHeaders += "-H '" + k + ": " + strings.Join(v, ",") + "' "
 	}
 	var body []byte
-
+	var message string
+	// log body with limits or without
 	if r.ContentLength > 0 && m.maxLogBodySize > -1 {
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -58,10 +59,8 @@ func (m *middlewareCollection) loggingRequest(r *http.Request) porterr.IError {
 		}
 		r.Body = ioutil.NopCloser(buf)
 	}
-
-	format := fmt.Sprintf("\x1b[33;1mREQUESTED: \x1b[34;1mcurl -X %s '%s' %s -d '%s'\x1b[0m", r.Method, m.getRequestedUrl(r), logHeaders, strings.Join(strings.Fields(string(body)), " "))
-	m.app.GetLogger(gocli.LogLevelDebug).Info(format)
-
+	message = gohelp.AnsiYellow + "REQUESTED: " + gohelp.AnsiBlue + "curl -X " + r.Method + " '" + m.getRequestedUrl(r) + "' " + logHeaders + " -d" + "'" + strings.Join(strings.Fields(string(body)), " ") + "'" + gohelp.AnsiReset
+	m.app.GetLogger(gocli.LogLevelDebug).Info(message)
 	return nil
 }
 
@@ -75,22 +74,19 @@ func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler
 		}
 		defer func() {
 			if r := recover(); r != nil {
-				var err error
+				var e porterr.IError
 				switch r.(type) {
-				case error:
-					err = r.(error)
-				case string:
-					err = errors.New(r.(string))
 				case porterr.IError:
-					err = errors.New(r.(porterr.IError).Error())
+					e = r.(porterr.IError)
+				case error:
+					e = porterr.New(porterr.PortErrorSystem, "​​​​Critical issue: "+r.(error).Error())
+				case string:
+					e = porterr.New(porterr.PortErrorSystem, "​​​​Critical issue: "+r.(string))
 				default:
-					err = errors.New("some unsupported error")
+					e = porterr.New(porterr.PortErrorSystem, "​​​​Critical issue: "+fmt.Sprintf("unsupported error: %T", r))
 				}
-				e := porterr.NewF(porterr.PortErrorSystem, "​​​​Critical issue. Please send it to technical support: %s", err.Error())
-				key := "stack"
-				message := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-				e = e.PushDetail(&key,"callback", message)
-				m.app.GetLogger(gocli.LogLevelDebug).Error(message)
+				e = e.PushDetail("stack", "callback", string(e.GetStack()))
+				m.app.GetLogger(gocli.LogLevelDebug).Error(e.Error())
 				gorest.Send(w, gorest.NewErrorJsonResponse(e))
 			}
 		}()
@@ -100,8 +96,8 @@ func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler
 
 // Not found handler
 func (m *middlewareCollection) NotFoundHandler(w http.ResponseWriter, r *http.Request) {
-	message := fmt.Sprintf("%s not found on server", m.getRequestedUrl(r))
-	m.app.GetLogger(gocli.LogLevelDebug).Error("\x1b[33;1mREQUESTED: \x1b[31;1m", message, "\x1b[0m")
+	message := m.getRequestedUrl(r) + " not found on server"
+	m.app.GetLogger(gocli.LogLevelDebug).Error(gohelp.AnsiYellow + "REQUESTED: " + gohelp.AnsiRed + message + gohelp.AnsiReset)
 	e := porterr.New(porterr.PortErrorHandler, message).HTTP(http.StatusNotFound)
 	gorest.Send(w, gorest.NewErrorJsonResponse(e))
 	return

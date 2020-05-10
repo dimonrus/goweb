@@ -1,0 +1,16 @@
+depends:
+project:
+  name: web
+  debug: true
+arguments:
+  app:
+    type: string
+    label: application type
+web:
+  port: 8080
+  host: 0.0.0.0
+  url: http://localhost
+  timeout:
+    read: 30
+    write: 30
+    idle: 30

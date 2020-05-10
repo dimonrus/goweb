@@ -1,12 +1,30 @@
 package goweb
 
+import "sync"
+
+// Event Name
+type ConnectionEventName string
+
+// Events that can be
+type ConnectionEvent struct {
+	// Name of the event
+	Name ConnectionEventName
+	// Mark when event happens
+	Done chan bool
+}
+
+// Listeners struct
+type ConnectionEventListeners struct {
+	rw       sync.RWMutex
+	listener map[ConnectionIdentifier][]ConnectionEvent
+}
+
 // Register connection listener
-func (cel *ConnectionEventListeners) Register(id ConnectionIdentifier, name ConnectionEventName) chan bool {
+func (cel *ConnectionEventListeners) Register(id ConnectionIdentifier, name ConnectionEventName) <-chan bool {
 	cel.rw.Lock()
 	defer cel.rw.Unlock()
 	event := &ConnectionEvent{Name: name, Done: make(chan bool, 1)}
 	cel.listener[id] = append(cel.listener[id], *event)
-
 	return event.Done
 }
 
@@ -19,7 +37,6 @@ func (cel *ConnectionEventListeners) Unregister(id ConnectionIdentifier, name Co
 			cel.listener[id] = append(cel.listener[id][:i], cel.listener[id][i+1:]...)
 		}
 	}
-
 	return cel
 }
 
@@ -28,7 +45,6 @@ func (cel *ConnectionEventListeners) UnregisterConnection(id ConnectionIdentifie
 	cel.rw.Lock()
 	defer cel.rw.Unlock()
 	delete(cel.listener, id)
-
 	return cel
 }
 
@@ -43,7 +59,6 @@ func (cel *ConnectionEventListeners) Dispatch(id ConnectionIdentifier, name Conn
 			}
 		}
 	}
-
 	return cel
 }
 
@@ -51,12 +66,7 @@ func (cel *ConnectionEventListeners) Dispatch(id ConnectionIdentifier, name Conn
 func (cel *ConnectionEventListeners) Get(id ConnectionIdentifier) []ConnectionEvent {
 	cel.rw.RLock()
 	defer cel.rw.RUnlock()
-	if events, ok := cel.listener[id]; ok {
-		return events
-	}
-
-	events := make([]ConnectionEvent, 0)
-	return events
+	return cel.listener[id]
 }
 
 // New Connection event Listener

@@ -1,16 +1,24 @@
 package goweb
 
-import "net"
+import (
+	"net"
+	"sync"
+)
+
+// Connection unique identifier
+type ConnectionIdentifier string
+
+// Connections
+type Connections struct {
+	rw          sync.RWMutex
+	connections map[ConnectionIdentifier]net.Conn
+}
 
 // Get connection if exists
 func (cs *Connections) Get(id ConnectionIdentifier) net.Conn {
 	cs.rw.RLock()
 	defer cs.rw.RUnlock()
-	if con, ok := cs.connections[id]; ok {
-		return con
-	}
-
-	return nil
+	return cs.connections[id]
 }
 
 // Set connection
@@ -18,7 +26,6 @@ func (cs *Connections) Set(id ConnectionIdentifier, conn net.Conn) *Connections 
 	cs.rw.Lock()
 	defer cs.rw.Unlock()
 	cs.connections[id] = conn
-
 	return cs
 }
 
@@ -29,7 +36,6 @@ func (cs *Connections) Unset(id ConnectionIdentifier) *Connections {
 	if _, ok := cs.connections[id]; ok {
 		delete(cs.connections, id)
 	}
-
 	return cs
 }
 

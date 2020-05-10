@@ -1,12 +1,23 @@
 package goweb
 
+import "sync"
+
+// Identifier for bind with connection
+type BindingIdentifier interface{}
+
+// Bindings
+type ConnectionBindings struct {
+	rw                  sync.RWMutex
+	connectionBindingId map[ConnectionIdentifier]BindingIdentifier
+	bindingIdConnection map[BindingIdentifier]ConnectionIdentifier
+}
+
 // Associate connection with id
 func (cb *ConnectionBindings) Bind(bId BindingIdentifier, id ConnectionIdentifier) *ConnectionBindings {
 	cb.rw.Lock()
 	defer cb.rw.Unlock()
 	cb.bindingIdConnection[bId] = id
 	cb.connectionBindingId[id] = bId
-
 	return cb
 }
 
@@ -16,7 +27,6 @@ func (cb *ConnectionBindings) UnBind(bId BindingIdentifier, id ConnectionIdentif
 	defer cb.rw.Unlock()
 	delete(cb.bindingIdConnection, bId)
 	delete(cb.connectionBindingId, id)
-
 	return cb
 }
 
@@ -24,22 +34,14 @@ func (cb *ConnectionBindings) UnBind(bId BindingIdentifier, id ConnectionIdentif
 func (cb *ConnectionBindings) GetConnectionId(bId BindingIdentifier) ConnectionIdentifier {
 	cb.rw.Lock()
 	defer cb.rw.Unlock()
-	if connId, ok := cb.bindingIdConnection[bId]; ok {
-		return connId
-	}
-
-	return ""
+	return cb.bindingIdConnection[bId]
 }
 
 // Get participantId by connection id
 func (cb *ConnectionBindings) GetBindingId(id ConnectionIdentifier) BindingIdentifier {
 	cb.rw.Lock()
 	defer cb.rw.Unlock()
-	if id, ok := cb.connectionBindingId[id]; ok {
-		return id
-	}
-
-	return nil
+	return cb.connectionBindingId[id]
 }
 
 // New bindings
