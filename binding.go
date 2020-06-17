@@ -44,6 +44,17 @@ func (cb *ConnectionBindings) GetBindingId(id ConnectionIdentifier) BindingIdent
 	return cb.connectionBindingId[id]
 }
 
+// Get all bindings identifiers
+func (cb *ConnectionBindings) GetBindingIdentifiers() []BindingIdentifier {
+	cb.rw.Lock()
+	defer cb.rw.Unlock()
+	result := make([]BindingIdentifier, 0)
+	for id, _ := range cb.bindingIdConnection {
+		result = append(result, id)
+	}
+	return result
+}
+
 // New bindings
 func NewConnectionBindings() *ConnectionBindings {
 	return &ConnectionBindings{

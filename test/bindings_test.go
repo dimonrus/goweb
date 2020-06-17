@@ -51,6 +51,17 @@ func TestConnectionBindings_UnBind(t *testing.T) {
 	}
 }
 
+func TestConnectionBindings_GetBindingIdentifiers(t *testing.T) {
+	b := goweb.NewConnectionBindings()
+	b = b.Bind("bid", "cid")
+	b = b.Bind("bid2", "cid2")
+	ids := b.GetBindingIdentifiers()
+	if ids[0] == "bid" || ids[0] == "bid2" {
+		return
+	}
+	t.Fatal("its wrong")
+}
+
 func BenchmarkBindings(b *testing.B) {
 	bindings := goweb.NewConnectionBindings()
 	for i := 0; i < b.N; i++ {
