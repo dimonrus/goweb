@@ -46,6 +46,17 @@ func (cs *Connections) Len() int {
 	return len(cs.connections)
 }
 
+// Get all identifiers
+func (cs *Connections) GetIdentifiers() []ConnectionIdentifier {
+	cs.rw.RLock()
+	defer cs.rw.RUnlock()
+	result := make([]ConnectionIdentifier, 0)
+	for id, _ := range cs.connections {
+		result = append(result, id)
+	}
+	return result
+}
+
 // Init tcp connection pool
 func NewConnections() *Connections {
 	return &Connections{

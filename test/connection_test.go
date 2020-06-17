@@ -53,6 +53,18 @@ func TestConnections_Unset(t *testing.T) {
 	}
 }
 
+func TestConnections_GetIdentifiers(t *testing.T) {
+	c := goweb.NewConnections()
+	con := net.TCPConn{}
+	c.Set("cid", &con)
+	c.Set("cida", &con)
+
+	keys := c.GetIdentifiers()
+	if len(keys) != 2 {
+		t.Fatal("wrong ids")
+	}
+}
+
 func BenchmarkConnections_Unset(b *testing.B) {
 	c := goweb.NewConnections()
 	con := net.TCPConn{}
