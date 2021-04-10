@@ -20,7 +20,7 @@ type middlewareCollection struct {
 	maxLogBodySize int64
 }
 
-// New Middleware Collection Init Method
+// NewMiddlewareCollection New Middleware Collection Init Method
 func NewMiddlewareCollection(config Config, app gocli.Application, maxLogBodySize int64) *middlewareCollection {
 	return &middlewareCollection{
 		config: config,
@@ -60,11 +60,11 @@ func (m *middlewareCollection) loggingRequest(r *http.Request) porterr.IError {
 		r.Body = ioutil.NopCloser(buf)
 	}
 	message = gohelp.AnsiYellow + "REQUESTED: " + gohelp.AnsiBlue + "curl -X " + r.Method + " '" + m.getRequestedUrl(r) + "' " + logHeaders + " -d" + "'" + strings.Join(strings.Fields(string(body)), " ") + "'" + gohelp.AnsiReset
-	m.app.GetLogger(gocli.LogLevelDebug).Info(message)
+	m.app.GetLogger().Info(message)
 	return nil
 }
 
-// Logging middleware
+// LoggingMiddleware Logging middleware
 func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e := m.loggingRequest(r)
@@ -79,14 +79,14 @@ func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler
 				case porterr.IError:
 					e = r.(porterr.IError)
 				case error:
-					e = porterr.New(porterr.PortErrorSystem, "​​​​Critical issue: "+r.(error).Error())
+					e = porterr.New(porterr.PortErrorSystem, "Critical issue: "+r.(error).Error())
 				case string:
-					e = porterr.New(porterr.PortErrorSystem, "​​​​Critical issue: "+r.(string))
+					e = porterr.New(porterr.PortErrorSystem, "Critical issue: "+r.(string))
 				default:
-					e = porterr.New(porterr.PortErrorSystem, "​​​​Critical issue: "+fmt.Sprintf("unsupported error: %T", r))
+					e = porterr.New(porterr.PortErrorSystem, "Critical issue: "+fmt.Sprintf("unsupported error: %T", r))
 				}
 				e = e.PushDetail("stack", "callback", string(e.GetStack()))
-				m.app.GetLogger(gocli.LogLevelDebug).Error(e.Error())
+				m.app.GetLogger().Error(e.Error())
 				gorest.Send(w, gorest.NewErrorJsonResponse(e))
 			}
 		}()
@@ -94,10 +94,10 @@ func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler
 	})
 }
 
-// Not found handler
+// NotFoundHandler Not found handler
 func (m *middlewareCollection) NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	message := m.getRequestedUrl(r) + " not found on server"
-	m.app.GetLogger(gocli.LogLevelDebug).Error(gohelp.AnsiYellow + "REQUESTED: " + gohelp.AnsiRed + message + gohelp.AnsiReset)
+	m.app.GetLogger().Error(gohelp.AnsiYellow + "REQUESTED: " + gohelp.AnsiRed + message + gohelp.AnsiReset)
 	e := porterr.New(porterr.PortErrorHandler, message).HTTP(http.StatusNotFound)
 	gorest.Send(w, gorest.NewErrorJsonResponse(e))
 	return

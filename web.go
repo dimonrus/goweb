@@ -25,7 +25,7 @@ var CommandActions = []string{
 	CommandStart, CommandStop, CommandRestart, CommandStatus,
 }
 
-// Web config
+// Config Web configuration
 type Config struct {
 	// Web application port
 	Port int
@@ -44,7 +44,7 @@ type Config struct {
 	}
 }
 
-// Web Application
+// Application Web Application struct
 type Application struct {
 	// The console application base interface.
 	// Required for start
@@ -57,7 +57,7 @@ type Application struct {
 	exit chan bool
 }
 
-// Parse gocli.Command
+// DecomposeCommand Parse gocli.Command
 func DecomposeCommand(command *gocli.Command) (action string, arguments []gocli.Argument, e porterr.IError) {
 	args := command.Arguments()
 	if len(args) > 0 {
@@ -91,7 +91,7 @@ func (a *Application) shutdown() <-chan bool {
 	return a.exit
 }
 
-// Web command processor
+// WebCommander Web command processor
 func (a *Application) WebCommander(command *gocli.Command) {
 	a.SuccessMessage("Receive command: "+command.String(), &gocli.Command{})
 	action, _, e := DecomposeCommand(command)
@@ -108,18 +108,18 @@ func (a *Application) WebCommander(command *gocli.Command) {
 	}
 }
 
-// Make server and listen
+// Listen Make server and listen
 func (a *Application) Listen(routes http.Handler) {
 	// Set routes
 	a.server.Handler = routes
 	// Run server so that it doesn't block.
 	go func() {
 		if err := a.server.ListenAndServe(); err != nil {
-			a.GetLogger(gocli.LogLevelDebug).Error("Can't listen: ", err.Error())
+			a.GetLogger().Error("Can't listen: ", err.Error())
 		}
 	}()
 	// Log into console that server started
-	a.GetLogger(gocli.LogLevelDebug).Infof("Web server started at %s", a.server.Addr)
+	a.GetLogger().Infof("Web server started at %s", a.server.Addr)
 	// Block until program receive exit command or wait for OS interrupt
 	<-a.shutdown()
 	// Create a deadline to wait for.
@@ -132,12 +132,12 @@ func (a *Application) Listen(routes http.Handler) {
 		a.FatalError(err)
 	}
 	// Log shutdown into console
-	a.GetLogger(gocli.LogLevelDebug).Warn("Server shutting down")
+	a.GetLogger().Warn("Server shutting down")
 	// os.Exit(0)
 	return
 }
 
-// Init Web Application
+// NewApplication Init Web Application
 func NewApplication(config Config, app gocli.Application, connState func(net.Conn, http.ConnState)) *Application {
 	return &Application{
 		config:      config,
