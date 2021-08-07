@@ -10,7 +10,7 @@ type ConnectionEvent struct {
 	// Name of the event
 	Name ConnectionEventName
 	// Mark when event happens
-	Done chan bool
+	Done chan struct{}
 }
 
 // Listeners struct
@@ -20,10 +20,10 @@ type ConnectionEventListeners struct {
 }
 
 // Register connection listener
-func (cel *ConnectionEventListeners) Register(id ConnectionIdentifier, name ConnectionEventName) <-chan bool {
+func (cel *ConnectionEventListeners) Register(id ConnectionIdentifier, name ConnectionEventName) <-chan struct{} {
 	cel.rw.Lock()
 	defer cel.rw.Unlock()
-	event := &ConnectionEvent{Name: name, Done: make(chan bool, 1)}
+	event := &ConnectionEvent{Name: name, Done: make(chan struct{}, 1)}
 	cel.listener[id] = append(cel.listener[id], *event)
 	return event.Done
 }
@@ -55,7 +55,7 @@ func (cel *ConnectionEventListeners) Dispatch(id ConnectionIdentifier, name Conn
 	if events, ok := cel.listener[id]; ok {
 		for i := range events {
 			if events[i].Name == name && len(events[i].Done) == 0 {
-				events[i].Done <- true
+				events[i].Done <- struct{}{}
 			}
 		}
 	}

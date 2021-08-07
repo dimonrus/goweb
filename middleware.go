@@ -9,6 +9,7 @@ import (
 	"github.com/dimonrus/porterr"
 	"io/ioutil"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 	"strings"
 )
@@ -85,7 +86,7 @@ func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler
 				default:
 					e = porterr.New(porterr.PortErrorSystem, "Critical issue: "+fmt.Sprintf("unsupported error: %T", r))
 				}
-				e = e.PushDetail("stack", "callback", string(e.GetStack()))
+				e = e.PushDetail("stack", "callback", string(debug.Stack()))
 				m.app.GetLogger().Error(e.Error())
 				gorest.Send(w, gorest.NewErrorJsonResponse(e))
 			}

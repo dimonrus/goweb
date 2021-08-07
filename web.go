@@ -54,7 +54,7 @@ type Application struct {
 	// Http server type
 	server *http.Server
 	// Exit web server
-	exit chan bool
+	exit chan struct{}
 }
 
 // DecomposeCommand Parse gocli.Command
@@ -80,13 +80,13 @@ func DecomposeCommand(command *gocli.Command) (action string, arguments []gocli.
 }
 
 // Graceful shutdown web application
-func (a *Application) shutdown() <-chan bool {
+func (a *Application) shutdown() <-chan struct{} {
 	go func() {
 		sig := make(chan os.Signal, 1)
 		// Accept graceful shutdowns when quit (Ctrl+C)
 		signal.Notify(sig, os.Interrupt)
 		<-sig
-		a.exit <- true
+		a.exit <- struct{}{}
 	}()
 	return a.exit
 }
@@ -103,7 +103,7 @@ func (a *Application) WebCommander(command *gocli.Command) {
 	case CommandStop:
 		a.AttentionMessage("Stopping web server by command... " + command.String())
 		go func() {
-			a.exit <- true
+			a.exit <- struct{}{}
 		}()
 	}
 }
@@ -142,7 +142,7 @@ func NewApplication(config Config, app gocli.Application, connState func(net.Con
 	return &Application{
 		config:      config,
 		Application: app,
-		exit:        make(chan bool),
+		exit:        make(chan struct{}),
 		server: &http.Server{
 			Addr:         config.Host + ":" + strconv.Itoa(config.Port),
 			ReadTimeout:  time.Second * time.Duration(config.Timeout.Read),
