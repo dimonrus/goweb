@@ -1,11 +1,11 @@
-github.com/dimonrus/gocli v0.9.2 h1:N7MDY5mSlFQHtfEuQZ7LEkFADmZ43JBMtkuVCJ28+Fs=
-github.com/dimonrus/gocli v0.9.2/go.mod h1:El+etFG0+LEdJzIMGkcYGSojmh+vTqRAtQbusHjNQaA=
+github.com/dimonrus/gocli v0.9.3 h1:6YhFfJP/YGO+tQz40yq4Xf36NoM+yoU88ilAsKbJN14=
+github.com/dimonrus/gocli v0.9.3/go.mod h1:YNDO6a3ZXwhJm1ksnWpVhzwaMNSeXc5CjGvOMJPu3Hk=
 github.com/dimonrus/gohelp v0.4.0 h1:4EPgmMGuGfddFP0YK/D67B1RH362aHBOHCmj7r1PTSU=
 github.com/dimonrus/gohelp v0.4.0/go.mod h1:+dOOHmnzKauApxlx1kn/sHAYds3gPvMvXLpeLtBq82E=
-github.com/dimonrus/gorest v0.8.2 h1:Jp5js2CC1r8MTNEyXcqfn61NqsU25IviQ1UzY+nQ74o=
-github.com/dimonrus/gorest v0.8.2/go.mod h1:0L8oY/6pNm72akLGY6J5DtST5whOkbDLet3Bixoa4XE=
-github.com/dimonrus/porterr v1.10.0 h1:NpxjsrdSiNNASoGVuQ2fZCyg/0Z6Et1cvoyCmdrILuA=
-github.com/dimonrus/porterr v1.10.0/go.mod h1:BCVpaUyYdawPPzeAa8yjCYvemctND1I9ER/nFnOyDgQ=
+github.com/dimonrus/gorest v0.8.3 h1:HCw19RRXwCDKbuFtDs2REYbrd408PcQcElANWcrGksU=
+github.com/dimonrus/gorest v0.8.3/go.mod h1:Zf8zihJq0b20f2thJCGdHz6V13O88x/y8xBXBEF06IM=
+github.com/dimonrus/porterr v1.10.1 h1:d47TbN8srmxx2TzTuJ0XVGnX9w+cCGATB9YJEKuciYA=
+github.com/dimonrus/porterr v1.10.1/go.mod h1:BCVpaUyYdawPPzeAa8yjCYvemctND1I9ER/nFnOyDgQ=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v2 v2.2.7 h1:VUgggvou5XRW9mHwD/yXxIYSMtY0zoKQf/v226p2nyo=
