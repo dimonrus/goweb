@@ -151,16 +151,18 @@ func (a *Application) Listen(routes http.Handler) {
 	go func() {
 		var err error
 		if a.config.Security.IsTLS() {
+			// Log into console that server started
+			a.GetLogger().Infof("Start %s at %s", gohelp.AnsiGreen + "secure web server" + gohelp.AnsiReset, gohelp.AnsiBlue + a.server.Addr + gohelp.AnsiReset)
 			err = a.server.ListenAndServeTLS(a.config.Security.ServerCert, a.config.Security.ServerKey)
 		} else {
+			// Log into console that server started
+			a.GetLogger().Infof("Start %s at %s", gohelp.AnsiYellow + "insecure web server" + gohelp.AnsiReset, gohelp.AnsiBlue + a.server.Addr + gohelp.AnsiReset)
 			err = a.server.ListenAndServe()
 		}
 		if err != nil {
 			a.GetLogger().Error("Can't listen: ", err.Error())
 		}
 	}()
-	// Log into console that server started
-	a.GetLogger().Infof("Web server started at %s", a.server.Addr)
 	// Block until program receive exit command or wait for OS interrupt
 	<-a.shutdown()
 	// Create a deadline to wait for.
