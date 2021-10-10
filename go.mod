@@ -7,4 +7,5 @@ require (
 	github.com/dimonrus/gohelp v0.4.0
 	github.com/dimonrus/gorest v0.8.3
 	github.com/dimonrus/porterr v1.10.1
+	golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6
 )

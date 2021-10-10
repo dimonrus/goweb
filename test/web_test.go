@@ -93,6 +93,9 @@ func getWebApplication() *goweb.Application {
 	}
 	app := gocli.NewApplication("global", rootPath+"/config", &config)
 	//app.ParseFlags(&config.Arguments)
+	config.Web.Security.HTTP2Enable = false
+	config.Web.Security.ServerCert = "cert.crt"
+	config.Web.Security.ServerKey = "key.key"
 
 	return goweb.NewApplication(config.Web, app, nil)
 }

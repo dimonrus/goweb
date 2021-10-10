@@ -5,6 +5,7 @@ import (
 	"github.com/dimonrus/gocli"
 	"github.com/dimonrus/gohelp"
 	"github.com/dimonrus/porterr"
+	"golang.org/x/net/http2"
 	"net"
 	"net/http"
 	"os"
@@ -42,6 +43,23 @@ type Config struct {
 		// Timeout idle
 		Idle int
 	}
+	// TLS config
+	Security TLSConfig
+}
+
+// TLS configuration
+type TLSConfig struct {
+	// Use http2 features
+	HTTP2Enable bool `yaml:"http2Enable"`
+	// TLS certificate path
+	ServerCert string `yaml:"serverCert"`
+	// TLS private key path
+	ServerKey string `yaml:"serverKey"`
+}
+
+// TLS enabled
+func (t *TLSConfig) IsTLS() bool {
+	return t.ServerCert != "" && t.ServerKey != ""
 }
 
 // Application Web Application struct
@@ -108,13 +126,36 @@ func (a *Application) WebCommander(command *gocli.Command) {
 	}
 }
 
+// Setup TLS
+func (a *Application) setupTLS() {
+	// setup TLS
+	if a.config.Security.IsTLS() {
+		// Enable http2
+		if a.config.Security.HTTP2Enable {
+			var http2Server = http2.Server{}
+			err := http2.ConfigureServer(a.server, &http2Server)
+			if err != nil {
+				a.FatalError(err)
+			}
+		}
+	}
+}
+
 // Listen Make server and listen
 func (a *Application) Listen(routes http.Handler) {
+	// Setup security
+	a.setupTLS()
 	// Set routes
 	a.server.Handler = routes
 	// Run server so that it doesn't block.
 	go func() {
-		if err := a.server.ListenAndServe(); err != nil {
+		var err error
+		if a.config.Security.IsTLS() {
+			err = a.server.ListenAndServeTLS(a.config.Security.ServerCert, a.config.Security.ServerKey)
+		} else {
+			err = a.server.ListenAndServe()
+		}
+		if err != nil {
 			a.GetLogger().Error("Can't listen: ", err.Error())
 		}
 	}()
