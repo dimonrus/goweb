@@ -88,7 +88,7 @@ func DecomposeCommand(command *gocli.Command) (action string, arguments []gocli.
 			return
 		}
 		action = args[1].Name
-		if !gohelp.ExistsInArrayString(action, CommandActions) {
+		if !gohelp.ExistsInArray(action, CommandActions) {
 			e = porterr.New(porterr.PortErrorArgument, "Web command action is unknown: "+action)
 		}
 	} else {
@@ -152,11 +152,11 @@ func (a *Application) Listen(routes http.Handler) {
 		var err error
 		if a.config.Security.IsTLS() {
 			// Log into console that server started
-			a.GetLogger().Infof("Start %s at %s", gohelp.AnsiGreen + "secure web server" + gohelp.AnsiReset, gohelp.AnsiBlue + a.server.Addr + gohelp.AnsiReset)
+			a.GetLogger().Infof("Start %s at %s", gohelp.AnsiGreen+"secure web server"+gohelp.AnsiReset, gohelp.AnsiBlue+a.server.Addr+gohelp.AnsiReset)
 			err = a.server.ListenAndServeTLS(a.config.Security.ServerCert, a.config.Security.ServerKey)
 		} else {
 			// Log into console that server started
-			a.GetLogger().Infof("Start %s at %s", gohelp.AnsiYellow + "insecure web server" + gohelp.AnsiReset, gohelp.AnsiBlue + a.server.Addr + gohelp.AnsiReset)
+			a.GetLogger().Infof("Start %s at %s", gohelp.AnsiYellow+"insecure web server"+gohelp.AnsiReset, gohelp.AnsiBlue+a.server.Addr+gohelp.AnsiReset)
 			err = a.server.ListenAndServe()
 		}
 		if err != nil {
