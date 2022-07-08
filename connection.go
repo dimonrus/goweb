@@ -5,10 +5,10 @@ import (
 	"sync"
 )
 
-// Connection unique identifier
+// ConnectionIdentifier Connection unique identifier
 type ConnectionIdentifier string
 
-// Connections
+// Connections contains connection map
 type Connections struct {
 	rw          sync.RWMutex
 	connections map[ConnectionIdentifier]net.Conn
@@ -39,14 +39,14 @@ func (cs *Connections) Unset(id ConnectionIdentifier) *Connections {
 	return cs
 }
 
-// Connections len
+// Len connections len
 func (cs *Connections) Len() int {
 	cs.rw.Lock()
 	defer cs.rw.Unlock()
 	return len(cs.connections)
 }
 
-// Get all identifiers
+// GetIdentifiers get all identifiers
 func (cs *Connections) GetIdentifiers() []ConnectionIdentifier {
 	cs.rw.RLock()
 	defer cs.rw.RUnlock()
@@ -57,7 +57,7 @@ func (cs *Connections) GetIdentifiers() []ConnectionIdentifier {
 	return result
 }
 
-// Init tcp connection pool
+// NewConnections Init tcp connection pool
 func NewConnections() *Connections {
 	return &Connections{
 		connections: make(map[ConnectionIdentifier]net.Conn),

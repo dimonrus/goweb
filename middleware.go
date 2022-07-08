@@ -68,10 +68,12 @@ func (m *middlewareCollection) loggingRequest(r *http.Request) porterr.IError {
 // LoggingMiddleware Logging middleware
 func (m *middlewareCollection) LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		e := m.loggingRequest(r)
-		if e != nil {
-			gorest.Send(w, gorest.NewErrorJsonResponse(e))
-			return
+		if m.config.Debug {
+			e := m.loggingRequest(r)
+			if e != nil {
+				gorest.Send(w, gorest.NewErrorJsonResponse(e))
+				return
+			}
 		}
 		defer func() {
 			if r := recover(); r != nil {

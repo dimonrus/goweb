@@ -43,11 +43,13 @@ type Config struct {
 		// Timeout idle
 		Idle int
 	}
+	// Web debug flag
+	Debug bool
 	// TLS config
 	Security TLSConfig
 }
 
-// TLS configuration
+// TLSConfig TLS configuration
 type TLSConfig struct {
 	// Use http2 features
 	HTTP2Enable bool `yaml:"http2Enable"`
@@ -57,7 +59,7 @@ type TLSConfig struct {
 	ServerKey string `yaml:"serverKey"`
 }
 
-// TLS enabled
+// IsTLS is TLS enabled
 func (t *TLSConfig) IsTLS() bool {
 	return t.ServerCert != "" && t.ServerKey != ""
 }

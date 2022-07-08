@@ -2,10 +2,10 @@ package goweb
 
 import "sync"
 
-// Event Name
+// ConnectionEventName Event Name
 type ConnectionEventName string
 
-// Events that can be
+// ConnectionEvent Events that can be
 type ConnectionEvent struct {
 	// Name of the event
 	Name ConnectionEventName
@@ -13,7 +13,7 @@ type ConnectionEvent struct {
 	Done chan struct{}
 }
 
-// Listeners struct
+// ConnectionEventListeners Listeners struct
 type ConnectionEventListeners struct {
 	rw       sync.RWMutex
 	listener map[ConnectionIdentifier][]ConnectionEvent
@@ -40,7 +40,7 @@ func (cel *ConnectionEventListeners) Unregister(id ConnectionIdentifier, name Co
 	return cel
 }
 
-// Unregister connection listener
+// UnregisterConnection unregister connection listener
 func (cel *ConnectionEventListeners) UnregisterConnection(id ConnectionIdentifier) *ConnectionEventListeners {
 	cel.rw.Lock()
 	defer cel.rw.Unlock()
@@ -69,7 +69,7 @@ func (cel *ConnectionEventListeners) Get(id ConnectionIdentifier) []ConnectionEv
 	return cel.listener[id]
 }
 
-// New Connection event Listener
+// NewConnectionEventListeners New Connection event listener
 func NewConnectionEventListeners() *ConnectionEventListeners {
 	return &ConnectionEventListeners{listener: make(map[ConnectionIdentifier][]ConnectionEvent)}
 }
