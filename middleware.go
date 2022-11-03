@@ -2,12 +2,13 @@ package goweb
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/dimonrus/gocli"
 	"github.com/dimonrus/gohelp"
 	"github.com/dimonrus/gorest"
 	"github.com/dimonrus/porterr"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"runtime/debug"
 	"strconv"
@@ -48,7 +49,7 @@ func (m *middlewareCollection) loggingRequest(r *http.Request) porterr.IError {
 	var message string
 	// log body with limits or without
 	if r.ContentLength > 0 && m.maxLogBodySize > -1 {
-		data, err := ioutil.ReadAll(r.Body)
+		data, err := io.ReadAll(r.Body)
 		if err != nil {
 			return porterr.New(porterr.PortErrorBody, "IO error: "+err.Error()).HTTP(http.StatusBadRequest)
 		}
@@ -58,7 +59,7 @@ func (m *middlewareCollection) loggingRequest(r *http.Request) porterr.IError {
 		} else {
 			body = data
 		}
-		r.Body = ioutil.NopCloser(buf)
+		r.Body = io.NopCloser(buf)
 	}
 	message = gohelp.AnsiYellow + "REQUESTED: " + gohelp.AnsiBlue + "curl -X " + r.Method + " '" + m.getRequestedUrl(r) + "' " + logHeaders + " -d" + "'" + strings.Join(strings.Fields(string(body)), " ") + "'" + gohelp.AnsiReset
 	m.app.GetLogger().Info(message)
@@ -104,4 +105,12 @@ func (m *middlewareCollection) NotFoundHandler(w http.ResponseWriter, r *http.Re
 	e := porterr.New(porterr.PortErrorHandler, message).HTTP(http.StatusNotFound)
 	gorest.Send(w, gorest.NewErrorJsonResponse(e))
 	return
+}
+
+// TraceRequest assign trace id to request
+func (m *middlewareCollection) TraceRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), "x-trace-id", gohelp.NewUUID())
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

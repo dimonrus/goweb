@@ -3,14 +3,14 @@ module github.com/dimonrus/goweb
 go 1.18
 
 require (
-	github.com/dimonrus/gocli v0.9.5
+	github.com/dimonrus/gocli v0.9.7
 	github.com/dimonrus/gohelp v1.1.1
-	github.com/dimonrus/gorest v0.8.5
-	github.com/dimonrus/porterr v1.10.4
-	golang.org/x/net v0.0.0-20220607020251-c690dde0001d
+	github.com/dimonrus/gorest v0.8.6
+	github.com/dimonrus/porterr v1.11.1
+	golang.org/x/net v0.1.0
 )
 
 require (
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
