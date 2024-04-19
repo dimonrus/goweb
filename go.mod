@@ -7,10 +7,10 @@ require (
 	github.com/dimonrus/gohelp v1.2.0
 	github.com/dimonrus/gorest v0.8.9
 	github.com/dimonrus/porterr v1.13.1
-	golang.org/x/net v0.11.0
+	golang.org/x/net v0.23.0
 )
 
 require (
-	golang.org/x/text v0.10.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
