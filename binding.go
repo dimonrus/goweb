@@ -21,7 +21,7 @@ func (cb *ConnectionBindings) Bind(bId BindingIdentifier, id ConnectionIdentifie
 	return cb
 }
 
-// UnBind Unbind connection with id
+// UnBind connection with id
 func (cb *ConnectionBindings) UnBind(bId BindingIdentifier, id ConnectionIdentifier) *ConnectionBindings {
 	cb.rw.Lock()
 	defer cb.rw.Unlock()
@@ -30,7 +30,7 @@ func (cb *ConnectionBindings) UnBind(bId BindingIdentifier, id ConnectionIdentif
 	return cb
 }
 
-// GetConnectionId Get connection Id by id
+// GetConnectionId Get connection identifier by id
 func (cb *ConnectionBindings) GetConnectionId(bId BindingIdentifier) ConnectionIdentifier {
 	cb.rw.RLock()
 	defer cb.rw.RUnlock()
