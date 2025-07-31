@@ -18,7 +18,7 @@ import (
 
 type WebConfig struct {
 	Web       goweb.Config
-	Arguments gocli.Arguments
+	Arguments gocli.ArgumentMap
 }
 
 var config WebConfig
